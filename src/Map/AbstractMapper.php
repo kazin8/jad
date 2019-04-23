@@ -18,17 +18,30 @@ abstract class AbstractMapper implements Mapper
     protected $em;
 
     /**
+     * @var CacheStorage| null
+     */
+    private $cache = null;
+
+    /**
      * @var array
      */
     protected $map = [];
 
     /**
+     * @var string
+     */
+    protected $cacheKey;
+
+    /**
      * AbstractMapper constructor.
      * @param EntityManagerInterface $em
+     * @param CacheStorage|null $cache
      */
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em, ?CacheStorage $cache = null)
     {
         $this->em = $em;
+        $this->cache = $cache;
+        $this->cacheKey = static::class;
     }
 
     /**
@@ -127,5 +140,41 @@ abstract class AbstractMapper implements Mapper
         }
 
         throw new MappingException('Map item with class name [' . $className . '] not found.', 400);
+    }
+
+    /**
+     * @return CacheStorage|null
+     */
+    public function getCache(): ?CacheStorage
+    {
+        return $this->cache;
+    }
+
+    /**
+     * @param CacheStorage|null $cache
+     * @return AbstractMapper
+     */
+    public function setCache(?CacheStorage $cache): AbstractMapper
+    {
+        $this->cache = $cache;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCacheKey(): string
+    {
+        return $this->cacheKey;
+    }
+
+    /**
+     * @param string $cacheKey
+     * @return AbstractMapper
+     */
+    public function setCacheKey(string $cacheKey): AbstractMapper
+    {
+        $this->cacheKey = $cacheKey;
+        return $this;
     }
 }

@@ -5,6 +5,7 @@ namespace Jad\Map;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Jad\Common\Text;
+use Zend\Cache\Storage\StorageInterface;
 
 /**
  * Class AnnotationsMapper
@@ -15,47 +16,58 @@ class AnnotationsMapper extends AbstractMapper
     /**
      * AnnotationsMapper constructor.
      * @param EntityManagerInterface $em
+     * @param StorageInterface| null $cache
      * @throws \Doctrine\Common\Annotations\AnnotationException
      */
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em, ?StorageInterface $cache = null)
     {
-        parent::__construct($em);
+        parent::__construct($em, $cache);
 
-        $reader = new AnnotationReader();
-        $metaData = $em->getMetadataFactory()->getAllMetadata();
+        $cacheKey = $this->getCacheKey();
 
-        /** @var \Doctrine\ORM\Mapping\ClassMetadataInfo $meta */
-        foreach ($metaData as $meta) {
-            $head = $reader->getClassAnnotation($meta->getReflectionClass(), Annotations\Header::class);
+        if ($cache && $cache->hasItem($cacheKey)) {
+            $this->map = $cache->getItem($cacheKey);
+        } else {
+            $reader = new AnnotationReader();
+            $metaData = $em->getMetadataFactory()->getAllMetadata();
 
-            if (!empty($head) && !empty($head->type)) {
-                $className = $meta->getName();
-                $paginate = !!$head->paginate;
-                $this->add($head->type, $className, $paginate);
+            /** @var \Doctrine\ORM\Mapping\ClassMetadataInfo $meta */
+            foreach ($metaData as $meta) {
+                $head = $reader->getClassAnnotation($meta->getReflectionClass(), Annotations\Header::class);
 
-                if (!empty($head->aliases)) {
-                    $aliases = explode(',', $head->aliases);
+                if (!empty($head) && !empty($head->type)) {
+                    $className = $meta->getName();
+                    $paginate = !!$head->paginate;
+                    $this->add($head->type, $className, $paginate);
 
-                    foreach ($aliases as $type) {
-                        $this->add($type, $className, $paginate);
+                    if (!empty($head->aliases)) {
+                        $aliases = explode(',', $head->aliases);
+
+                        foreach ($aliases as $type) {
+                            $this->add($type, $className, $paginate);
+                        }
+                    }
+
+                    // Set auto aliases for relationship mappings that do not
+                    // @phan-suppress-next-line PhanUndeclaredMethod
+                    foreach ($meta->getAssociationMappings() as $associatedType => $associatedData) {
+                        $targetType = $associatedData['targetEntity'];
+                        $targetType = preg_replace('/.*\\\(.+?)/', '$1', $targetType);
+                        $associatedType = ucfirst($associatedType);
+
+                        if ($targetType !== $associatedType) {
+                            $this->add(
+                                Text::kebabify($associatedType),
+                                $associatedData['targetEntity'],
+                                $paginate
+                            );
+                        }
                     }
                 }
+            }
 
-                // Set auto aliases for relationship mappings that do not
-                // @phan-suppress-next-line PhanUndeclaredMethod
-                foreach ($meta->getAssociationMappings() as $associatedType => $associatedData) {
-                    $targetType = $associatedData['targetEntity'];
-                    $targetType = preg_replace('/.*\\\(.+?)/', '$1', $targetType);
-                    $associatedType = ucfirst($associatedType);
-
-                    if ($targetType !== $associatedType) {
-                        $this->add(
-                            Text::kebabify($associatedType),
-                            $associatedData['targetEntity'],
-                            $paginate
-                        );
-                    }
-                }
+            if ($cache) {
+                $cache->setItem($cacheKey, $this->map);
             }
         }
     }

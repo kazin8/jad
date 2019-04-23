@@ -15,10 +15,11 @@ class AutoMapper extends AbstractMapper
      * AutoMapper constructor.
      * @param EntityManagerInterface $em
      * @param array $excluded
+     * @param CacheStorage|null $cache
      */
-    public function __construct(EntityManagerInterface $em, array $excluded = [])
+    public function __construct(EntityManagerInterface $em, array $excluded = [], ?CacheStorage $cache = null)
     {
-        parent::__construct($em);
+        parent::__construct($em, $cache);
 
         $metaData = $em->getMetadataFactory()->getAllMetadata();
 
