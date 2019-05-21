@@ -5,7 +5,6 @@ namespace Jad\Map;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Jad\Common\Text;
-use Zend\Cache\Storage\StorageInterface;
 
 /**
  * Class AnnotationsMapper
@@ -16,10 +15,10 @@ class AnnotationsMapper extends AbstractMapper
     /**
      * AnnotationsMapper constructor.
      * @param EntityManagerInterface $em
-     * @param StorageInterface| null $cache
+     * @param CacheStorage| null $cache
      * @throws \Doctrine\Common\Annotations\AnnotationException
      */
-    public function __construct(EntityManagerInterface $em, ?StorageInterface $cache = null)
+    public function __construct(EntityManagerInterface $em, ?CacheStorage $cache = null)
     {
         parent::__construct($em, $cache);
 
