@@ -2,6 +2,7 @@
 
 namespace Jad\Serializers;
 
+use Jad\Map\CacheStorage;
 use Jad\Map\Mapper;
 use Jad\Request\JsonApiRequest;
 use Jad\Common\Text;
@@ -94,7 +95,7 @@ abstract class AbstractSerializer implements Serializer
         $cache = $this->mapper->getCache();
         $cacheKey = $this->getMapItem()->getEntityClass() . "::" . md5(json_encode($fields));
 
-        if ($cache->hasItem($cacheKey)) {
+        if ($cache instanceof CacheStorage && $cache->hasItem($cacheKey)) {
             $result = $cache->getItem($cacheKey);
         } else {
             $reader = new AnnotationReader();
@@ -157,7 +158,11 @@ abstract class AbstractSerializer implements Serializer
 
                 $attributes[Text::kebabify($field)] = $value;
             }
-            $cache->setItem($cacheKey, $attributes);
+
+            if ($cache instanceof CacheStorage) {
+                $cache->setItem($cacheKey, $attributes);
+            }
+
             $result = $attributes;
         }
 
