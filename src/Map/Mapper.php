@@ -32,4 +32,26 @@ interface Mapper
      * @return MapItem|null
      */
     public function getMapItemByClass(string $className): ?MapItem;
+
+    /**
+     * @return CacheStorage|null
+     */
+    public function getCache(): ?CacheStorage;
+
+    /**
+     * @param CacheStorage|null $cache
+     * @return Mapper
+     */
+    public function setCache(?CacheStorage $cache): Mapper;
+
+    /**
+     * @return string
+     */
+    public function getCacheKey(): string;
+
+    /**
+     * @param string $cacheKey
+     * @return Mapper
+     */
+    public function setCacheKey(string $cacheKey): Mapper;
 }

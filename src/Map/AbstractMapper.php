@@ -154,7 +154,7 @@ abstract class AbstractMapper implements Mapper
      * @param CacheStorage|null $cache
      * @return AbstractMapper
      */
-    public function setCache(?CacheStorage $cache): AbstractMapper
+    public function setCache(?CacheStorage $cache): Mapper
     {
         $this->cache = $cache;
         return $this;
@@ -172,7 +172,7 @@ abstract class AbstractMapper implements Mapper
      * @param string $cacheKey
      * @return AbstractMapper
      */
-    public function setCacheKey(string $cacheKey): AbstractMapper
+    public function setCacheKey(string $cacheKey): Mapper
     {
         $this->cacheKey = $cacheKey;
         return $this;

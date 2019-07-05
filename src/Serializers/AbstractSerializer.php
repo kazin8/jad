@@ -91,68 +91,77 @@ abstract class AbstractSerializer implements Serializer
      */
     public function getAttributes($entity, ?array $fields): array
     {
-        $reader = new AnnotationReader();
-        $attributes = [];
+        $cache = $this->mapper->getCache();
+        $cacheKey = $this->getMapItem()->getEntityClass() . "::" . md5(json_encode($fields));
 
-        if (is_array($fields)) {
-            $fields = array_map(function ($field) {
-                return Text::deKebabify($field);
-            }, $fields);
-        }
+        if ($cache->hasItem($cacheKey)) {
+            $result = $cache->getItem($cacheKey);
+        } else {
+            $reader = new AnnotationReader();
+            $attributes = [];
 
-        $metaFields = $this->getMapItem()->getClassMeta()->getFieldNames();
-        $reflection = new \ReflectionClass($this->getMapItem()->getEntityClass());
-        $classFields = array_keys($reflection->getDefaultProperties());
-
-        $mergedFields = array_unique(array_merge($metaFields, $classFields));
-
-        foreach ($mergedFields as $field) {
-            // Do not display association
-            if ($this->getMapItem()->getClassMeta()->hasAssociation($field)) {
-                continue;
+            if (is_array($fields)) {
+                $fields = array_map(function ($field) {
+                    return Text::deKebabify($field);
+                }, $fields);
             }
 
-            // Do not display id field
-            if ($field === $this->getMapItem()->getIdField()) {
-                continue;
-            }
+            $metaFields = $this->getMapItem()->getClassMeta()->getFieldNames();
+            $reflection = new \ReflectionClass($this->getMapItem()->getEntityClass());
+            $classFields = array_keys($reflection->getDefaultProperties());
 
-            // If filtered fields, only show selected fields
-            if (!empty($fields) && !in_array($field, $fields)) {
-                continue;
-            }
+            $mergedFields = array_unique(array_merge($metaFields, $classFields));
 
-            $jadAnnotation = $reader->getPropertyAnnotation(
-                $reflection->getProperty($field),
-                'Jad\Map\Annotations\Attribute'
-            );
+            foreach ($mergedFields as $field) {
+                // Do not display association
+                if ($this->getMapItem()->getClassMeta()->hasAssociation($field)) {
+                    continue;
+                }
 
-            if (!is_null($jadAnnotation)) {
-                if (property_exists($jadAnnotation, 'visible')) {
-                    $visible = is_null($jadAnnotation->visible) ? true : (bool)$jadAnnotation->visible;
+                // Do not display id field
+                if ($field === $this->getMapItem()->getIdField()) {
+                    continue;
+                }
 
-                    if (!$visible) {
-                        continue;
+                // If filtered fields, only show selected fields
+                if (!empty($fields) && !in_array($field, $fields)) {
+                    continue;
+                }
+
+                $jadAnnotation = $reader->getPropertyAnnotation(
+                    $reflection->getProperty($field),
+                    'Jad\Map\Annotations\Attribute'
+                );
+
+                if (!is_null($jadAnnotation)) {
+                    if (property_exists($jadAnnotation, 'visible')) {
+                        $visible = is_null($jadAnnotation->visible) ? true : (bool)$jadAnnotation->visible;
+
+                        if (!$visible) {
+                            continue;
+                        }
                     }
                 }
+
+                $fieldValue = ClassHelper::getPropertyValue($entity, $field);
+                $value = $fieldValue;
+
+                $annotation = $reader->getPropertyAnnotation(
+                    $reflection->getProperty($field),
+                    'Doctrine\ORM\Mapping\Column'
+                );
+
+                if ($fieldValue instanceof \DateTime) {
+                    $value = $this->getDateTime($fieldValue, $annotation->type);
+                }
+
+                $attributes[Text::kebabify($field)] = $value;
             }
-
-            $fieldValue = ClassHelper::getPropertyValue($entity, $field);
-            $value = $fieldValue;
-
-            $annotation = $reader->getPropertyAnnotation(
-                $reflection->getProperty($field),
-                'Doctrine\ORM\Mapping\Column'
-            );
-
-            if ($fieldValue instanceof \DateTime) {
-                $value = $this->getDateTime($fieldValue, $annotation->type);
-            }
-
-            $attributes[Text::kebabify($field)] = $value;
+            $cache->setItem($cacheKey, $attributes);
+            $result = $attributes;
         }
 
-        return $attributes;
+        return $result;
     }
 
     /**
