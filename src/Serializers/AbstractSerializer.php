@@ -95,7 +95,7 @@ abstract class AbstractSerializer implements Serializer
         $cache = $this->mapper->getCache();
         $cacheKey = $this->getMapItem()->getEntityClass() . "::" . md5(json_encode($fields));
 
-        if ($cache instanceof CacheStorage && $cache->hasItem($cacheKey)) {
+        if (false) { //$cache instanceof CacheStorage && $cache->hasItem($cacheKey)) {
             $result = $cache->getItem($cacheKey);
         } else {
             $reader = new AnnotationReader();
