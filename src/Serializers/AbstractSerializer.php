@@ -10,6 +10,7 @@ use Jad\Common\ClassHelper;
 use Jad\Map\MapItem;
 use Jad\Exceptions\SerializerException;
 use Doctrine\Common\Annotations\AnnotationReader;
+use Jad\Serializers\AbstractSerializer\MergedField;
 
 /**
  * Class AbstractSerializer
@@ -93,13 +94,14 @@ abstract class AbstractSerializer implements Serializer
     public function getAttributes($entity, ?array $fields): array
     {
         $cache = $this->mapper->getCache();
-        $cacheKey = $this->getMapItem()->getEntityClass() . "::" . md5(json_encode($fields));
+        $mapperCacheKey = $this->mapper->getCacheKey();
+        $cacheKey = $mapperCacheKey . '\\' . static::class . '=>' . $this->getMapItem()->getEntityClass() . '::' . md5(json_encode($fields));
+        $attributes = [];
 
-        if (false) { //$cache instanceof CacheStorage && $cache->hasItem($cacheKey)) {
-            $result = $cache->getItem($cacheKey);
+        if ($cache instanceof CacheStorage && $cache->hasItem($cacheKey)) {
+            $mergedFields = $cache->getItem($cacheKey);
         } else {
             $reader = new AnnotationReader();
-            $attributes = [];
 
             if (is_array($fields)) {
                 $fields = array_map(function ($field) {
@@ -111,9 +113,11 @@ abstract class AbstractSerializer implements Serializer
             $reflection = new \ReflectionClass($this->getMapItem()->getEntityClass());
             $classFields = array_keys($reflection->getDefaultProperties());
 
-            $mergedFields = array_unique(array_merge($metaFields, $classFields));
+            $mergedFieldsList = array_unique(array_merge($metaFields, $classFields));
 
-            foreach ($mergedFields as $field) {
+            $mergedFields = [];
+
+            foreach ($mergedFieldsList as $field) {
                 // Do not display association
                 if ($this->getMapItem()->getClassMeta()->hasAssociation($field)) {
                     continue;
@@ -128,45 +132,57 @@ abstract class AbstractSerializer implements Serializer
                 if (!empty($fields) && !in_array($field, $fields)) {
                     continue;
                 }
+                $mergedField = new MergedField();
 
                 $jadAnnotation = $reader->getPropertyAnnotation(
                     $reflection->getProperty($field),
                     'Jad\Map\Annotations\Attribute'
                 );
 
-                if (!is_null($jadAnnotation)) {
-                    if (property_exists($jadAnnotation, 'visible')) {
-                        $visible = is_null($jadAnnotation->visible) ? true : (bool)$jadAnnotation->visible;
-
-                        if (!$visible) {
-                            continue;
-                        }
-                    }
-                }
-
-                $fieldValue = ClassHelper::getPropertyValue($entity, $field);
-                $value = $fieldValue;
-
                 $annotation = $reader->getPropertyAnnotation(
                     $reflection->getProperty($field),
                     'Doctrine\ORM\Mapping\Column'
                 );
 
-                if ($fieldValue instanceof \DateTime) {
-                    $value = $this->getDateTime($fieldValue, $annotation->type);
-                }
+                $mergedField->setJadAnnotation($jadAnnotation);
+                $mergedField->setAnnotation($annotation);
 
-                $attributes[Text::kebabify($field)] = $value;
+                $mergedFields[$field] = $mergedField;
             }
 
             if ($cache instanceof CacheStorage) {
-                $cache->setItem($cacheKey, $attributes);
+                $cache->setItem($cacheKey, $mergedFields);
             }
-
-            $result = $attributes;
         }
 
-        return $result;
+        /** @var MergedField $mergedField */
+        foreach ($mergedFields as $field => $mergedField) {
+
+            $jadAnnotation = $mergedField->getJadAnnotation();
+
+            if (!is_null($jadAnnotation)) {
+                if (property_exists($jadAnnotation, 'visible')) {
+                    $visible = is_null($jadAnnotation->visible) ? true : (bool)$jadAnnotation->visible;
+
+                    if (!$visible) {
+                        continue;
+                    }
+                }
+            }
+
+            $fieldValue = ClassHelper::getPropertyValue($entity, $field);
+            $value = $fieldValue;
+
+            $annotation = $mergedField->getAnnotation();
+
+            if ($fieldValue instanceof \DateTime) {
+                $value = $this->getDateTime($fieldValue, $annotation->type);
+            }
+
+            $attributes[Text::kebabify($field)] = $value;
+        }
+
+        return $attributes;
     }
 
     /**
