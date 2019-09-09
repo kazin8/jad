@@ -2,10 +2,11 @@
 
 namespace Jad\Map;
 
-use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\Common\Persistence\Mapping\ClassMetadata;
 use Jad\Exceptions\JadException;
 use Jad\Map\Annotations\Header;
 use Doctrine\Common\Annotations\AnnotationReader;
+use Jad\Map\MapItem\OrmOdmAssociationMap;
 
 /**
  * Class MapItem
@@ -29,20 +30,30 @@ class MapItem
     private $classMeta;
 
     /**
+     * @var OrmOdmAssociationMap[]
+     */
+    private $ormOdmAssociationMap = [];
+
+    /**
      * @var bool
      */
     private $paginate = false;
 
     /**
      * MapItem constructor.
-     * @param $type
-     * @param mixed $params
+     * @param string $type
+     * @param $params
      * @param bool $paginate
+     * @param OrmOdmAssociationMap[]|null $associationMap
      */
-    public function __construct(string $type, $params, bool $paginate = false)
+    public function __construct(string $type, $params, bool $paginate = false, ?array $associationMap = null)
     {
         $this->setType($type);
         $this->setPaginate($paginate);
+
+        if (!is_null($associationMap)) {
+            $this->setOrmOdmAssociationMap($associationMap);
+        }
 
         if (is_string($params)) {
             $this->setEntityClass($params);
@@ -57,6 +68,40 @@ class MapItem
                 $this->setClassMeta($params['classMeta']);
             }
         }
+    }
+
+    public function getAssociationMapsKeys(): array
+    {
+        $result = array_keys($this->getClassMeta()->getAssociationNames());
+
+        foreach ($this->getOrmOdmAssociationMap() as $associationMap) {
+            $result[] = $associationMap->getTypeName();
+        }
+
+        return array_unique($result);
+    }
+
+    public function hasAssociation(string $name)
+    {
+        return in_array($name, $this->getAssociationMapsKeys());
+    }
+
+    /**
+     * @return OrmOdmAssociationMap[]
+     */
+    public function getOrmOdmAssociationMap(): array
+    {
+        return $this->ormOdmAssociationMap;
+    }
+
+    /**
+     * @param OrmOdmAssociationMap[] $ormOdmAssociationMap
+     * @return MapItem
+     */
+    public function setOrmOdmAssociationMap(array $ormOdmAssociationMap): MapItem
+    {
+        $this->ormOdmAssociationMap = $ormOdmAssociationMap;
+        return $this;
     }
 
     /**

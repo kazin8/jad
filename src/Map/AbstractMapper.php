@@ -2,9 +2,11 @@
 
 namespace Jad\Map;
 
+use Doctrine\ODM\MongoDB\DocumentManager;
 use Jad\Exceptions\MappingException;
 use Jad\Exceptions\ResourceNotFoundException;
 use Doctrine\ORM\EntityManagerInterface;
+use Jad\Map\MapItem\OrmOdmAssociationMap;
 
 /**
  * Class AbstractMapper
@@ -16,6 +18,11 @@ abstract class AbstractMapper implements Mapper
      * @var EntityManagerInterface $em
      */
     protected $em;
+
+    /**
+     * @var DocumentManager
+     */
+    protected $dm;
 
     /**
      * @var CacheStorage| null
@@ -37,9 +44,10 @@ abstract class AbstractMapper implements Mapper
      * @param EntityManagerInterface $em
      * @param CacheStorage|null $cache
      */
-    public function __construct(EntityManagerInterface $em, ?CacheStorage $cache = null)
+    public function __construct(EntityManagerInterface $em, DocumentManager $dm = null, ?CacheStorage $cache = null)
     {
         $this->em = $em;
+        $this->dm = $dm;
         $this->cache = $cache;
         $this->cacheKey = static::class;
     }
@@ -54,6 +62,14 @@ abstract class AbstractMapper implements Mapper
     }
 
     /**
+     * @return DocumentManager
+     */
+    public function getDm(): DocumentManager
+    {
+        return $this->dm;
+    }
+
+    /**
      * @codeCoverageIgnore
      * @return array
      */
@@ -64,15 +80,23 @@ abstract class AbstractMapper implements Mapper
 
     /**
      * @param string $type
-     * @param mixed $values
+     * @param $values
      * @param bool $paginate
+     * @param OrmOdmAssociationMap[]|null $associationMap
      */
-    public function add(string $type, $values, bool $paginate = false): void
+    public function add(string $type, $values, bool $paginate = false, ?array $associationMap = null): void
     {
-        $mapItem = new MapItem($type, $values, $paginate);
+        $mapItem = new MapItem($type, $values, $paginate, $associationMap);
 
         $entityClass = $mapItem->getEntityClass();
-        $mapItem->setClassMeta($this->em->getClassMetadata($entityClass));
+
+        try {
+            $classMetaData = $this->em->getClassMetadata($entityClass);
+        } catch (\Doctrine\Common\Persistence\Mapping\MappingException $exception) {
+            $classMetaData = $this->dm->getClassMetadata($entityClass);
+        }
+
+        $mapItem->setClassMeta($classMetaData);
 
         if (!$this->itemExists($mapItem)) {
             $this->map[] = $mapItem;

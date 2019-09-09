@@ -176,7 +176,7 @@ abstract class AbstractSerializer implements Serializer
             $annotation = $mergedField->getAnnotation();
 
             if ($fieldValue instanceof \DateTime) {
-                $value = $this->getDateTime($fieldValue, $annotation->type);
+                $value = $this->getDateTime($fieldValue, $annotation->type ?? null);
             }
 
             $attributes[Text::kebabify($field)] = $value;

@@ -2,6 +2,7 @@
 
 namespace Jad\Map;
 
+use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -14,6 +15,11 @@ interface Mapper
      * @return EntityManagerInterface
      */
     public function getEm(): EntityManagerInterface;
+
+    /**
+     * @return DocumentManager
+     */
+    public function getDm(): DocumentManager;
 
     /**
      * @param string $type
