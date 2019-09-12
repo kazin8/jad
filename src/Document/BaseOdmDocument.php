@@ -28,4 +28,18 @@ class BaseOdmDocument
         $this->annotationsMapper = $annotationsMapper;
         return $this;
     }
+
+    public function __get($name)
+    {
+        $mapItem = $this->getAnnotationsMapper()->getMapItemByClass(static::class);
+
+        $ormOdmAssociationMapItem = $mapItem->getOrmOdmAssociationMapItem($name);
+
+        $entityRepository = $this->getAnnotationsMapper()->getEm()->getRepository($ormOdmAssociationMapItem->getEntityClass());
+
+        $id = $this->{$ormOdmAssociationMapItem->getDocumentField()};
+
+        return $entityRepository->findBy([$ormOdmAssociationMapItem->getEntityField() => $id]);
+    }
+
 }
