@@ -37,7 +37,7 @@ class JsonDocument implements \JsonSerializable
     /**
      * @param Links $links
      */
-    public function addLinks(Links $links): void
+    public function addLinks(?Links $links): void
     {
         $this->links = $links;
     }
@@ -81,18 +81,20 @@ class JsonDocument implements \JsonSerializable
             /** @var Paginator $paginator */
             $paginator = $this->element->getPaginator();
 
-            $document->links->setSelf($paginator->getCurrent());
-            $document->links->setFirst($paginator->getFirst());
-            $document->links->setLast($paginator->getLast());
+            if ($document->links instanceof Links) {
+                $document->links->setSelf($paginator->getCurrent());
+                $document->links->setFirst($paginator->getFirst());
+                $document->links->setLast($paginator->getLast());
 
-            if ($paginator->hasNext()) {
-                $document->links->setNext($paginator->getNext());
+
+                if ($paginator->hasNext()) {
+                    $document->links->setNext($paginator->getNext());
+                }
+
+                if ($paginator->hasPrevious()) {
+                    $document->links->setPrevious($paginator->getPrevious());
+                }
             }
-
-            if ($paginator->hasPrevious()) {
-                $document->links->setPrevious($paginator->getPrevious());
-            }
-
             $document->meta->setCount($paginator->getCount());
             $document->meta->setPages($paginator->getLastPage());
         }
