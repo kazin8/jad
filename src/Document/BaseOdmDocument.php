@@ -37,7 +37,9 @@ class BaseOdmDocument
 
         $entityRepository = $this->getAnnotationsMapper()->getEm()->getRepository($ormOdmAssociationMapItem->getEntityClass());
 
-        $id = $this->{$ormOdmAssociationMapItem->getDocumentField()};
+        $getMethodName = "get" . ucfirst($ormOdmAssociationMapItem->getDocumentField());
+
+        $id = $this->$getMethodName();
 
         return $entityRepository->findBy([$ormOdmAssociationMapItem->getEntityField() => $id]);
     }
