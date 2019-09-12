@@ -7,6 +7,8 @@ use Jad\Exceptions\JadException;
 use Jad\Map\Annotations\Header;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Jad\Map\MapItem\OrmOdmAssociationMap;
+use Doctrine\ODM\MongoDB\Mapping\ClassMetadata AS ODMClassMetadata;
+use Doctrine\ORM\Mapping\ClassMetadata AS ORMClassMetadata;
 
 /**
  * Class MapItem
@@ -39,24 +41,27 @@ class MapItem
      */
     private $paginate = false;
 
+
     /**
      * MapItem constructor.
      * @param string $type
      * @param $params
      * @param bool $paginate
-     * @param OrmOdmAssociationMap[]|null $associationMap
+     * @param array|null $associationMap
+     * @param MapItem[]|null $map
      */
     public function __construct(string $type, $params, bool $paginate = false, ?array $associationMap = null)
     {
         $this->setType($type);
         $this->setPaginate($paginate);
 
-        if (!is_null($associationMap)) {
-            $this->setOrmOdmAssociationMap($associationMap);
-        }
 
         if (is_string($params)) {
             $this->setEntityClass($params);
+        }
+
+        if (!is_null($associationMap)) {
+            $this->setOrmOdmAssociationMap($associationMap);
         }
 
         if (is_array($params)) {
@@ -68,11 +73,20 @@ class MapItem
                 $this->setClassMeta($params['classMeta']);
             }
         }
+
+
     }
 
     public function getAssociationMapsKeys(): array
+
     {
-        $result = array_keys($this->getClassMeta()->getAssociationNames());
+        $classMeta = $this->getClassMeta();
+
+        if ($classMeta instanceof ORMClassMetadata) {
+            $result = array_keys($classMeta->getAssociationNames());
+        } elseif ($classMeta instanceof ODMClassMetadata) {
+            $result = $classMeta->getAssociationNames();
+        }
 
         foreach ($this->getOrmOdmAssociationMap() as $associationMap) {
             $result[] = $associationMap->getTypeName();
@@ -84,6 +98,23 @@ class MapItem
     public function hasAssociation(string $name)
     {
         return in_array($name, $this->getAssociationMapsKeys());
+    }
+
+    /**
+     * @return OrmOdmAssociationMap
+     */
+    public function getOrmOdmAssociationMapItem(?string $typeName = null): ?OrmOdmAssociationMap
+    {
+        $result = null;
+
+        foreach ($this->getOrmOdmAssociationMap() as $item) {
+            if ($item->getTypeName() == $typeName) {
+                $result = $item;
+                break;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -122,6 +153,10 @@ class MapItem
      */
     private function setEntityClass(string $entityClass): MapItem
     {
+        if (substr($entityClass, 0, 1) !== '\\') {
+            $entityClass = '\\' . $entityClass;
+        }
+
         $this->entityClass = $entityClass;
         return $this;
     }

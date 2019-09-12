@@ -19,21 +19,19 @@ class ClassHelper
      */
     public static function getPropertyValue($class, string $property)
     {
-        $method = 'get' . ucfirst($property);
+        try {
+            $method = 'get' . ucfirst($property);
 
-        if (method_exists($class, $method)) {
-            return $class->$method();
+            if (method_exists($class, $method)) {
+                $result = $class->$method();
+            } else {
+                $result = $class->$property ?? null;
+            }
+
+            return $result;
+        } catch (\Throwable $throwable) {
+            throw new JadException('Property [' . $property . '] not found in class [' . get_class($class) . ']');
         }
-
-        $reflection = new \ReflectionClass($class);
-
-        if ($reflection->hasProperty($property)) {
-            $reflectionProperty = $reflection->getProperty($property);
-            $reflectionProperty->setAccessible(true);
-            return $reflectionProperty->getValue($class);
-        }
-
-        throw new JadException('Property [' . $property . '] not found in class [' . get_class($class) . ']');
     }
 
     /**

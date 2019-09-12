@@ -41,6 +41,8 @@ class AnnotationsMapper extends AbstractMapper
 
             $this->readMeta($em->getMetadataFactory()->getAllMetadata());
             $this->readMeta($dm->getMetadataFactory()->getAllMetadata());
+            $this->reverseAssociations();
+
 
             if ($cache) {
                 $cache->setItem($cacheKey, $this->map);
@@ -60,7 +62,7 @@ class AnnotationsMapper extends AbstractMapper
                     $ormOdmAssociation = $this->annotationReader->getPropertyAnnotation($reflectionProperty, OrmOdmAssociation::class);
 
                     if ($ormOdmAssociation instanceof OrmOdmAssociation) {
-                        $ormOdmAssociationMaps[] = new OrmOdmAssociationMap($ormOdmAssociation, $reflectionProperty->getName());
+                        $ormOdmAssociationMaps[] = new OrmOdmAssociationMap($ormOdmAssociation, $reflectionProperty->getName(), $meta->getReflectionClass()->getName(), $head->type);
                     }
                 }
 

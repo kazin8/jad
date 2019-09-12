@@ -19,12 +19,22 @@ class OrmOdmAssociationMap
     /**
      * @var string
      */
+    private $entityClass;
+
+    /**
+     * @var string
+     */
     private $entityField;
 
     /**
      * @var string
      */
     private $typeName;
+
+    /**
+     * @var string
+     */
+    private  $associatedTypeName;
 
     /**
      * @var bool
@@ -35,13 +45,15 @@ class OrmOdmAssociationMap
      * OrmOdmAssociationMap constructor.
      * @param $documentClass
      */
-    public function __construct(OrmOdmAssociation $association, string $typeName)
+    public function __construct(OrmOdmAssociation $association, string $typeName,string $entityClass, string $associatedTypeName)
     {
         $this->documentClass = $association->documentClass;
         $this->documentField = $association->documentField;
+        $this->entityClass = $entityClass;
         $this->entityField = $association->entityField;
         $this->paginate = $association->paginate;
         $this->typeName = $typeName;
+        $this->associatedTypeName = $associatedTypeName;
     }
 
 
@@ -78,6 +90,24 @@ class OrmOdmAssociationMap
     public function setDocumentField($documentField)
     {
         $this->documentField = $documentField;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEntityClass(): string
+    {
+        return $this->entityClass;
+    }
+
+    /**
+     * @param string $entityClass
+     * @return OrmOdmAssociationMap
+     */
+    public function setEntityClass(string $entityClass): OrmOdmAssociationMap
+    {
+        $this->entityClass = $entityClass;
         return $this;
     }
 
@@ -132,6 +162,24 @@ class OrmOdmAssociationMap
     public function setTypeName(string $typeName): OrmOdmAssociationMap
     {
         $this->typeName = $typeName;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAssociatedTypeName(): string
+    {
+        return $this->associatedTypeName;
+    }
+
+    /**
+     * @param string $associatedTypeName
+     * @return OrmOdmAssociationMap
+     */
+    public function setAssociatedTypeName(string $associatedTypeName): OrmOdmAssociationMap
+    {
+        $this->associatedTypeName = $associatedTypeName;
         return $this;
     }
 }

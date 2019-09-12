@@ -30,7 +30,7 @@ abstract class AbstractMapper implements Mapper
     private $cache = null;
 
     /**
-     * @var array
+     * @var MapItem[]
      */
     protected $map = [];
 
@@ -71,7 +71,7 @@ abstract class AbstractMapper implements Mapper
 
     /**
      * @codeCoverageIgnore
-     * @return array
+     * @return MapItem[]
      */
     public function getMap(): array
     {
@@ -157,6 +157,10 @@ abstract class AbstractMapper implements Mapper
      */
     public function getMapItemByClass(string $className): ?MapItem
     {
+        if (substr($className, 0, 1) !== '\\') {
+            $className = '\\' . $className;
+        }
+
         foreach ($this->map as $mapItem) {
             if ($mapItem->getEntityClass() === $className) {
                 return $mapItem;
@@ -200,5 +204,40 @@ abstract class AbstractMapper implements Mapper
     {
         $this->cacheKey = $cacheKey;
         return $this;
+    }
+
+    protected function reverseAssociations()
+    {
+        foreach ($this->getMap() as $mapItem) {
+            foreach ($mapItem->getOrmOdmAssociationMap() as $ormOdmAssociationMapItem) {
+                foreach ($this->map as $associatedKey => $associatedMapItem) {
+                    if ($associatedMapItem->getEntityClass() === $ormOdmAssociationMapItem->getDocumentClass()) {
+                        $typeName = $ormOdmAssociationMapItem->getTypeName();
+                        $associatedTypeName = $ormOdmAssociationMapItem->getAssociatedTypeName();
+
+                        $newMapItem = clone $ormOdmAssociationMapItem;
+
+                        $newMapItem->setAssociatedTypeName($typeName);
+                        $newMapItem->setTypeName($associatedTypeName);
+
+
+                        $associatedMap = $associatedMapItem->getOrmOdmAssociationMap();
+
+                        $found = false;
+
+                        foreach ($associatedMap as $mapItem) {
+                            if ($mapItem->getTypeName() == $newMapItem->getTypeName()) {
+                                $found = true;
+                                break;
+                            }
+                        }
+                        if (!$found) {
+                            $associatedMap[] = $newMapItem;
+                            $associatedMapItem->setOrmOdmAssociationMap($associatedMap);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
