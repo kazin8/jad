@@ -82,9 +82,10 @@ abstract class AbstractMapper implements Mapper
      * @param string $type
      * @param $values
      * @param bool $paginate
-     * @param OrmOdmAssociationMap[]|null $associationMap
+     * @param array|null $associationMap
+     * @param string|null $apiIdFieldName
      */
-    public function add(string $type, $values, bool $paginate = false, ?array $associationMap = null): void
+    public function add(string $type, $values, bool $paginate = false, ?array $associationMap = null, ?string $apiIdFieldName = null): void
     {
         $mapItem = new MapItem($type, $values, $paginate, $associationMap);
 
@@ -97,6 +98,10 @@ abstract class AbstractMapper implements Mapper
         }
 
         $mapItem->setClassMeta($classMetaData);
+
+        if (!is_null($apiIdFieldName)) {
+            $mapItem->setApiIdFiled($apiIdFieldName);
+        }
 
         if (!$this->itemExists($mapItem)) {
             $this->map[] = $mapItem;

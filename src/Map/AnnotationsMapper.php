@@ -55,6 +55,7 @@ class AnnotationsMapper extends AbstractMapper
         /** @var \Doctrine\Common\Persistence\Mapping\ClassMetadata $meta */
         foreach ($metaData as $meta) {
             $head = $this->annotationReader->getClassAnnotation($meta->getReflectionClass(), Annotations\Header::class);
+            $apiIdField = $this->annotationReader->getClassAnnotation($meta->getReflectionClass(), Annotations\ApiIdField::class);
             $ormOdmAssociationMaps = [];
 
             if (!empty($head) && !empty($head->type)) {
@@ -68,21 +69,26 @@ class AnnotationsMapper extends AbstractMapper
 
                 $className = $meta->getName();
                 $paginate = !!$head->paginate;
-                $this->add($head->type, $className, $paginate, $ormOdmAssociationMaps);
+                $this->add($head->type, $className, $paginate, $ormOdmAssociationMaps, $apiIdField->fieldName ?? null);
 
                 if (!empty($head->aliases)) {
                     $aliases = explode(',', $head->aliases);
 
                     foreach ($aliases as $type) {
-                        $this->add($type, $className, $paginate, $ormOdmAssociationMaps);
+                        $this->add($type, $className, $paginate, $ormOdmAssociationMaps, $apiIdField->fieldName ?? null);
                     }
                 }
 
                 foreach ($ormOdmAssociationMaps as $ormOdmAssociationMap) {
+                    $reflectionClass = $this->getDm()->getClassMetadata($ormOdmAssociationMap->getDocumentClass())->getReflectionClass();
+                    $apiIdField = $this->annotationReader->getClassAnnotation($reflectionClass, Annotations\ApiIdField::class);
+
                     $this->add(
                         Text::kebabify($ormOdmAssociationMap->getTypeName()),
                         $ormOdmAssociationMap->getDocumentClass(),
-                        $ormOdmAssociationMap->isPaginate()
+                        $ormOdmAssociationMap->isPaginate(),
+                        null,
+                        $apiIdField->fieldName ?? null
                     );
                 }
 
@@ -90,6 +96,9 @@ class AnnotationsMapper extends AbstractMapper
                     // Set auto aliases for relationship mappings that do not
                     // @phan-suppress-next-line PhanUndeclaredMethod
                     foreach ($meta->getAssociationMappings() as $associatedType => $associatedData) {
+                        $reflectionClass = $this->getEm()->getClassMetadata($associatedData['targetEntity'])->getReflectionClass();
+                        $apiIdField = $this->annotationReader->getClassAnnotation($reflectionClass, Annotations\ApiIdField::class);
+
                         $targetType = $associatedData['targetEntity'];
                         $targetType = preg_replace('/.*\\\(.+?)/', '$1', $targetType);
                         $associatedType = ucfirst($associatedType);
@@ -98,7 +107,9 @@ class AnnotationsMapper extends AbstractMapper
                             $this->add(
                                 Text::kebabify($associatedType),
                                 $associatedData['targetEntity'],
-                                $paginate
+                                $paginate,
+                                null,
+                                $apiIdField->fieldName ?? null
                             );
                         }
                     }

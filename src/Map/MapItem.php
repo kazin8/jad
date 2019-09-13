@@ -41,6 +41,11 @@ class MapItem
      */
     private $paginate = false;
 
+    /**
+     * @var string|null
+     */
+    private $apiIdFiled;
+
 
     /**
      * MapItem constructor.
@@ -176,21 +181,27 @@ class MapItem
      */
     public function getIdField(): string
     {
-        if (!$this->classMeta instanceof ClassMetadata) {
-            throw new JadException('No class meta data found');
+        if (!is_null($this->apiIdFiled)) {
+            $result = $this->apiIdFiled;
+        } else {
+            if (!$this->classMeta instanceof ClassMetadata) {
+                throw new JadException('No class meta data found');
+            }
+
+            $identifier = $this->classMeta->getIdentifier();
+
+            if (count($identifier) > 1) {
+                throw new JadException('Composite identifier not supported');
+            }
+
+            if (count($identifier) < 1) {
+                throw new JadException('No identifier found');
+            }
+
+            $result = $identifier[0];
         }
 
-        $identifier = $this->classMeta->getIdentifier();
-
-        if (count($identifier) > 1) {
-            throw new JadException('Composite identifier not supported');
-        }
-
-        if (count($identifier) < 1) {
-            throw new JadException('No identifier found');
-        }
-
-        return $identifier[0];
+        return $result;
     }
 
     /**
@@ -253,6 +264,24 @@ class MapItem
             }
         }
         return false;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getApiIdFiled(): ?string
+    {
+        return $this->apiIdFiled;
+    }
+
+    /**
+     * @param string|null $apiIdFiled
+     * @return MapItem
+     */
+    public function setApiIdFiled(?string $apiIdFiled): MapItem
+    {
+        $this->apiIdFiled = $apiIdFiled;
+        return $this;
     }
 
     /**
