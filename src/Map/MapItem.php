@@ -88,7 +88,7 @@ class MapItem
         $classMeta = $this->getClassMeta();
 
         if ($classMeta instanceof ORMClassMetadata) {
-            $result = array_keys($classMeta->getAssociationNames());
+            $result = $classMeta->getAssociationNames();
         } elseif ($classMeta instanceof ODMClassMetadata) {
             $result = $classMeta->getAssociationNames();
         }
