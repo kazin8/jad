@@ -123,11 +123,6 @@ abstract class AbstractSerializer implements Serializer
                     continue;
                 }
 
-                // Do not display id field
-                if ($field === $this->getMapItem()->getIdField()) {
-                    continue;
-                }
-
                 // If filtered fields, only show selected fields
                 if (!empty($fields) && !in_array($field, $fields)) {
                     continue;
