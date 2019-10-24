@@ -241,6 +241,12 @@ class Parameters
         }, $fields);
     }
 
+    public function addFilter(array $additionalFilter): array
+    {
+        $this->arguments['filter'] = array_merge($this->arguments['filter'], $additionalFilter);
+        return $this->getFilter();
+    }
+
     /**
      * @return array
      */
