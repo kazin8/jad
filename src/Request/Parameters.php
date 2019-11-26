@@ -45,6 +45,16 @@ class Parameters
     }
 
     /**
+     * @param array $includes
+     * @return $this
+     */
+    public function setIncludes(array $includes)
+    {
+        $this->includes = $includes;
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getIncludes(): array
