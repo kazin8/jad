@@ -243,7 +243,7 @@ class Parameters
 
     public function addFilter(array $additionalFilter): array
     {
-        $this->arguments['filter'] = array_merge($this->arguments['filter'], $additionalFilter);
+        $this->arguments['filter'] = array_merge_recursive($this->arguments['filter'], $additionalFilter);
         return $this->getFilter();
     }
 
