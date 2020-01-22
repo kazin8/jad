@@ -95,7 +95,7 @@ abstract class AbstractSerializer implements Serializer
     {
         $cache = $this->mapper->getCache();
         $mapperCacheKey = $this->mapper->getCacheKey();
-        $cacheKey = $mapperCacheKey . '\\' . static::class . '=>' . $this->getMapItem()->getEntityClass() . '::' . md5(json_encode($fields));
+        $cacheKey = $mapperCacheKey . '\\' . static::class . '=>' . get_class($entity) . '::' . md5(json_encode($fields));
         $attributes = [];
 
         if ($cache instanceof CacheStorage && $cache->hasItem($cacheKey)) {
@@ -110,7 +110,7 @@ abstract class AbstractSerializer implements Serializer
             }
 
             $metaFields = $this->getMapItem()->getClassMeta()->getFieldNames();
-            $reflection = new \ReflectionClass($this->getMapItem()->getEntityClass());
+            $reflection = new \ReflectionClass(get_class($entity));
             $classFields = array_keys($reflection->getDefaultProperties());
 
             $mergedFieldsList = array_unique(array_merge($metaFields, $classFields));

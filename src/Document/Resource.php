@@ -106,6 +106,7 @@ class Resource implements \JsonSerializable, Element
 
         $resource->id = $this->serializer->getId($entity);
         $resource->type = $type;
+        $resource->class = get_class($entity);
 
         if ($this->serializer instanceof RelationshipSerializer) {
             $relationship = $this->serializer->getRelationship();
