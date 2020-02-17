@@ -110,7 +110,7 @@ abstract class AbstractSerializer implements Serializer
             }
 
             $metaFields = $this->getMapItem()->getClassMeta()->getFieldNames();
-            $reflection = new \ReflectionClass(get_class($entity));
+            $reflection = new \ReflectionClass($this->getMapItem()->getEntityClass());
             $classFields = array_keys($reflection->getDefaultProperties());
 
             $mergedFieldsList = array_unique(array_merge($metaFields, $classFields));
