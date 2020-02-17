@@ -129,16 +129,13 @@ abstract class AbstractSerializer implements Serializer
                 }
                 $mergedField = new MergedField();
 
-                $reflectionProperty = $reflection->getProperty($field);
-                $reflectionProperty->setAccessible(true);
-
                 $jadAnnotation = $reader->getPropertyAnnotation(
-                    $reflectionProperty,
+                    $reflection->getProperty($field),
                     'Jad\Map\Annotations\Attribute'
                 );
 
                 $annotation = $reader->getPropertyAnnotation(
-                    $reflectionProperty,
+                    $reflection->getProperty($field),
                     'Doctrine\ORM\Mapping\Column'
                 );
 
