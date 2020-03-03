@@ -110,7 +110,7 @@ abstract class AbstractSerializer implements Serializer
             }
 
             $metaFields = $this->getMapItem()->getClassMeta()->getFieldNames();
-            $reflection = new \ReflectionClass($this->getMapItem()->getEntityClass());
+            $reflection = new \ReflectionClass(get_class($entity));
             $classFields = array_keys($reflection->getDefaultProperties());
 
             $mergedFieldsList = array_unique(array_merge($metaFields, $classFields));
@@ -127,22 +127,28 @@ abstract class AbstractSerializer implements Serializer
                 if (!empty($fields) && !in_array($field, $fields)) {
                     continue;
                 }
-                $mergedField = new MergedField();
 
-                $jadAnnotation = $reader->getPropertyAnnotation(
-                    $reflection->getProperty($field),
-                    'Jad\Map\Annotations\Attribute'
-                );
+                try {
 
-                $annotation = $reader->getPropertyAnnotation(
-                    $reflection->getProperty($field),
-                    'Doctrine\ORM\Mapping\Column'
-                );
+                    $mergedField = new MergedField();
 
-                $mergedField->setJadAnnotation($jadAnnotation);
-                $mergedField->setAnnotation($annotation);
+                    $jadAnnotation = $reader->getPropertyAnnotation(
+                        $reflection->getProperty($field),
+                        'Jad\Map\Annotations\Attribute'
+                    );
 
-                $mergedFields[$field] = $mergedField;
+                    $annotation = $reader->getPropertyAnnotation(
+                        $reflection->getProperty($field),
+                        'Doctrine\ORM\Mapping\Column'
+                    );
+
+                    $mergedField->setJadAnnotation($jadAnnotation);
+                    $mergedField->setAnnotation($annotation);
+
+                    $mergedFields[$field] = $mergedField;
+                } catch (\Throwable $throwable) {
+
+                }
             }
 
             if ($cache instanceof CacheStorage) {
