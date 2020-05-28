@@ -8,6 +8,7 @@ use Jad\Serializers\Serializer;
 use Jad\Common\Text;
 use Jad\Common\ClassHelper;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Util\ClassUtils;
 
 /**
  * Class Resource
@@ -106,7 +107,7 @@ class Resource implements \JsonSerializable, Element
 
         $resource->id = $this->serializer->getId($entity);
         $resource->type = $type;
-        $resource->class = get_class($entity);
+        $resource->class = ClassUtils::getClass($entity);
 
         if ($this->serializer instanceof RelationshipSerializer) {
             $relationship = $this->serializer->getRelationship();
