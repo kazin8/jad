@@ -35,9 +35,10 @@ interface Serializer
     /**
      * @param $entity
      * @param array|null $fields
+     * @param array|null $fieldsBlacklist
      * @return mixed
      */
-    public function getAttributes($entity, ?array $fields): array;
+    public function getAttributes($entity, ?array $fields, ?array $fieldsBlacklist = []): array;
 
     /**
      * @param $entity
@@ -49,9 +50,10 @@ interface Serializer
      * @param $type
      * @param $entity
      * @param $fields
+     * @param array|null $fieldsBlacklist
      * @return mixed
      */
-    public function getIncluded(string $type, $entity, array $fields);
+    public function getIncluded(string $type, $entity, array $fields, ?array $fieldsBlacklist = []);
 
     /**
      * @param string $type
@@ -59,7 +61,7 @@ interface Serializer
      * @param array $fields
      * @return array
      */
-    public function getIncludedResources(string $type, $collection, array $fields = []): array;
+    public function getIncludedResources(string $type, $collection, array $fields = [], ?array $fieldsBlacklist = []): array;
 
     /**
      * @return mixed

@@ -88,11 +88,12 @@ abstract class AbstractSerializer implements Serializer
     /**
      * @param $entity
      * @param array|null $fields
+     * @param array|null $fieldsBlacklist
      * @return array|mixed
      * @throws \Exception
      * @throws \Jad\Exceptions\JadException
      */
-    public function getAttributes($entity, ?array $fields): array
+    public function getAttributes($entity, ?array $fields, ?array $fieldsBlacklist = []): array
     {
         $entityClass = ClassUtils::getClass($entity);
 
@@ -121,6 +122,7 @@ abstract class AbstractSerializer implements Serializer
             $mergedFields = [];
 
             foreach ($mergedFieldsList as $field) {
+
                 // Do not display association
                 if ($this->getMapItem()->getClassMeta()->hasAssociation($field)) {
                     continue;
@@ -161,6 +163,14 @@ abstract class AbstractSerializer implements Serializer
 
         /** @var MergedField $mergedField */
         foreach ($mergedFields as $field => $mergedField) {
+            if ($fieldsBlacklist) {
+                if (
+                    key_exists($entityClass, $fieldsBlacklist)
+                    && in_array($field, $fieldsBlacklist[$entityClass])
+                ) {
+                    continue;
+                }
+            }
 
             $jadAnnotation = $mergedField->getJadAnnotation();
 
@@ -214,7 +224,7 @@ abstract class AbstractSerializer implements Serializer
      * @param array $fields
      * @return array
      */
-    public function getIncludedResources(string $type, $collection, array $fields = []): array
+    public function getIncludedResources(string $type, $collection, array $fields = [], ?array $fieldsBlacklist = []): array
     {
         return [];
     }

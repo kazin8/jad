@@ -42,14 +42,20 @@ class Resource implements \JsonSerializable, Element
     private $includedParams = null;
 
     /**
+     * @var array|null
+     */
+    private $fieldsBlacklist = [];
+
+    /**
      * Resource constructor.
      * @param $entity
      * @param Serializer $serializer
      */
-    public function __construct($entity, Serializer $serializer)
+    public function __construct($entity, Serializer $serializer, ?array $fieldsBlacklist = [])
     {
         $this->entity = $entity;
         $this->serializer = $serializer;
+        $this->fieldsBlacklist = $fieldsBlacklist;
     }
 
     /**
@@ -113,10 +119,10 @@ class Resource implements \JsonSerializable, Element
             $relationship = $this->serializer->getRelationship();
 
             if ($relationship['view'] !== 'list') {
-                $resource->attributes = $this->serializer->getAttributes($entity, $fields);
+                $resource->attributes = $this->serializer->getAttributes($entity, $fields, $this->fieldsBlacklist);
             }
         } else {
-            $resource->attributes = $this->serializer->getAttributes($entity, $fields);
+            $resource->attributes = $this->serializer->getAttributes($entity, $fields, $this->fieldsBlacklist);
 
             $relationships = $this->serializer->getRelationships($entity);
 
@@ -139,7 +145,7 @@ class Resource implements \JsonSerializable, Element
         foreach ($this->includedParams as $includes) {
             foreach ($includes as $includedType => $relation) {
                 if (empty($relation)) {
-                    $include = $this->serializer->getIncluded($includedType, $this->entity, $this->fields);
+                    $include = $this->serializer->getIncluded($includedType, $this->entity, $this->fields, $this->fieldsBlacklist);
 
                     if (!is_array($include)) {
                         throw new MappingException('Included type [' . $includedType . '] not available, check if resource type is mapped correctly.');
@@ -150,7 +156,7 @@ class Resource implements \JsonSerializable, Element
                     $path = explode('.', $relation);
                     array_unshift($path, $includedType);
                     $result = $this->crawlRelations($this->entity, $path);
-                    $include = $this->serializer->getIncludedResources($result['type'], $result['collection']);
+                    $include = $this->serializer->getIncludedResources($result['type'], $result['collection'], $this->fieldsBlacklist);
                     $included = array_merge($included, $include);
                 }
             }

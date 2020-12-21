@@ -94,7 +94,7 @@ class RelationshipSerializer extends AbstractSerializer implements Serializer
      * @param array $fields
      * @return array
      */
-    public function getIncluded(string $type, $entity, array $fields): array
+    public function getIncluded(string $type, $entity, array $fields, ?array $fieldsBlacklist = []): array
     {
         return [];
     }

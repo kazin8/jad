@@ -78,7 +78,7 @@ class EntitySerializer extends AbstractSerializer
      * @throws \Exception
      * @throws \Jad\Exceptions\JadException
      */
-    public function getIncluded(string $type, $entity, array $fields): ?array
+    public function getIncluded(string $type, $entity, array $fields, ?array $fieldsBlacklist = []): ?array
     {
         if (!$this->mapper->hasMapItem($type)) {
             return null;
@@ -91,9 +91,9 @@ class EntitySerializer extends AbstractSerializer
         $result = ClassHelper::getPropertyValue($entity, Text::deKebabify($type));
 
         if ($result instanceof PersistentCollection) {
-            return $this->getIncludedResources($type, $result, $fields);
+            return $this->getIncludedResources($type, $result, $fields, $fieldsBlacklist);
         } else {
-            return $this->getIncludedResources($type, [$result], $fields);
+            return $this->getIncludedResources($type, [$result], $fields, $fieldsBlacklist);
         }
     }
 
@@ -105,7 +105,7 @@ class EntitySerializer extends AbstractSerializer
      * @throws \Jad\Exceptions\JadException
      * @throws \ReflectionException
      */
-    public function getIncludedResources(string $type, $entityCollection, array $fields = []): array
+    public function getIncludedResources(string $type, $entityCollection, array $fields = [], ?array $fieldsBlacklist = []): array
     {
         $resources = [];
         $this->includeMeta[$type] = [];
