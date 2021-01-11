@@ -52,6 +52,8 @@ class AnnotationsMapper extends AbstractMapper
 
     private function readMeta(array $metaData)
     {
+        file_put_contents('/tmp/dump', var_export($metaData, true));
+
         /** @var \Doctrine\Common\Persistence\Mapping\ClassMetadata $meta */
         foreach ($metaData as $meta) {
             $head = $this->annotationReader->getClassAnnotation($meta->getReflectionClass(), Annotations\Header::class);
