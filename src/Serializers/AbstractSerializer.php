@@ -189,7 +189,7 @@ abstract class AbstractSerializer implements Serializer
 
             $annotation = $mergedField->getAnnotation();
 
-            if ($fieldValue instanceof \DateTime) {
+            if ($fieldValue instanceof \DateTimeInterface) {
                 $value = $this->getDateTime($fieldValue, $annotation->type ?? null);
             }
 
@@ -200,11 +200,11 @@ abstract class AbstractSerializer implements Serializer
     }
 
     /**
-     * @param \DateTime $value
+     * @param \DateTimeInterface $value
      * @param string $dateType
      * @return string
      */
-    protected function getDateTime(\DateTime $value, $dateType = 'datetime'): string
+    protected function getDateTime(\DateTimeInterface $value, $dateType = 'datetime'): string
     {
         switch ($dateType) {
             case 'date':
